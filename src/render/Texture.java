@@ -17,9 +17,12 @@ public class Texture {
 	public int height;
 	public ByteBuffer data;
 
-	/** data is in GL_UNSIGNED_BYTE form */
+	/** data is in GL_UNSIGNED_BYTE form
+	 * <br>
+	 * dots are replaced with file separators
+	 *  */
 	public Texture(String name, Format format) {
-		try (InputStream in = new FileInputStream("textures/" + name + ".png")) {
+		try (InputStream in = new FileInputStream("textures/" + name.replace('.', '\\') + ".png")) {
 			PNGDecoder decoder = new PNGDecoder(in);
 			ByteBuffer buf = BufferUtils.createByteBuffer(format.getNumComponents() * decoder.getWidth() * decoder.getHeight());
 			decoder.decode(buf, decoder.getWidth() * format.getNumComponents(), format);

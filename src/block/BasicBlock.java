@@ -7,13 +7,11 @@ import physics.link.Constants;
 
 public class BasicBlock extends Block {
 	int id;
-	double mass;
 	int[][] texture;
 	
-	public BasicBlock(int id, double mass, int texture) {
+	public BasicBlock(int id, int texture) {
 		this.id = id;
-		this.mass = mass;
-		this.texture = new int[][] {{texture, 0, Float.floatToRawIntBits(0)}};
+		this.texture = new int[][] {{texture, 0, 0}};
 	}
 	
 	@Override

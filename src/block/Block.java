@@ -19,9 +19,8 @@ public abstract class Block {
 	
 	static {
 		BASIC_BLOCKS[0] = new Empty();
-		BASIC_BLOCKS[1] = new BasicBlock(1, 1000, 0);
-		BASIC_BLOCKS[2] = new BasicBlock(2, 50, 1);
-		BASIC_BLOCKS[3] = new BasicBlock(3, 1000, 2);
+		BASIC_BLOCKS[1] = new BasicBlock(1, BlockGroupRenderer.BASIC_HULL);
+		BASIC_BLOCKS[2] = new BasicBlock(2, BlockGroupRenderer.BLUE_HULL);
 		
 		DATA_BLOCKS[0] = new HeatingBlock();
 	}
@@ -67,4 +66,6 @@ public abstract class Block {
 	public abstract double getHeatCapacity(int x, int y, BlockGroup parent);
 	/** Gets the heat, the default method is to read the data from the blockgroup */
 	public abstract double getHeat(int x, int y, BlockGroup parent);
+	/** Called whenever a neighboring block changes */
+	public void blockChange(Direction down) {}
 }

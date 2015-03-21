@@ -1,4 +1,4 @@
-#version 440 core
+#version 430 core
 
 layout(location = 0) uniform float size;
 layout(location = 1) uniform vec2 rotation;

@@ -45,9 +45,6 @@ public class Game {
 	}
 
 	static void mainLoop() {
-		BlockGroupRenderer.allocateTexture("Embosed Sheet");
-		BlockGroupRenderer.createTexture();
-		
 		int[] grid = new int[] {
 			1
 		};

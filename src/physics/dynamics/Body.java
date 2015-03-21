@@ -184,7 +184,7 @@ public class Body {
 	 * @param def the fixture definition.
 	 * @warning This function is locked during callbacks.
 	 */
-	public final Fixture createFixture(FixtureDef def) {
+	public Fixture createFixture(FixtureDef def) {
 		assert (m_world.isLocked() == false);
 
 		if (m_world.isLocked() == true) {

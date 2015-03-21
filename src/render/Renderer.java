@@ -85,8 +85,8 @@ public class Renderer {
 			GL20.glAttachShader(id, shader);
 
 		GL20.glLinkProgram(id);
-
-		if(CHECK_GL && GL11.GL_FALSE == GL20.glGetProgrami(id, GL20.GL_VALIDATE_STATUS)) {
+		
+		if(CHECK_GL && GL11.GL_FALSE == GL20.glGetProgrami(id, GL20.GL_LINK_STATUS)) {
 			int length = GL20.glGetProgrami(id, GL20.GL_INFO_LOG_LENGTH);
 			Console.error(GL20.glGetProgramInfoLog(id, length), "RENDER");
 		}
@@ -106,7 +106,7 @@ public class Renderer {
 	public static void createContext(boolean fullscreen) {
 		try {
 			PixelFormat pixelFormat = new PixelFormat(0, 8, 0, 4);
-			ContextAttribs contextAtrributes = new ContextAttribs(4, 4).withForwardCompatible(true).withProfileCore(true);
+			ContextAttribs contextAtrributes = new ContextAttribs(4, 3).withForwardCompatible(true).withProfileCore(true);
 
 			DisplayMode[] modes = Display.getAvailableDisplayModes();
 

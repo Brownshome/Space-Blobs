@@ -2,6 +2,8 @@ package block;
 
 import java.util.Arrays;
 
+import org.lwjgl.input.Keyboard;
+
 import io.user.KeyBinds;
 import io.user.KeyIO;
 import main.Game;
@@ -16,8 +18,11 @@ import physics.dynamics.FixtureDef;
 import physics.link.Constants;
 
 public class BlockGroup extends Body {
+	static SelectedBlock selected;
+
 	static {
 		KeyBinds.add(BlockGroup::mouseClick, 0, KeyIO.MOUSE_BUTTON_PRESSED, "block.select");
+		KeyBinds.add(() -> {if(selected != null) selected.parent.setBlock(selected.x, selected.y, 2);}, Keyboard.KEY_RETURN, KeyIO.KEY_PRESSED, "block.place");
 	}
 
 	static void mouseClick() {
@@ -26,6 +31,7 @@ public class BlockGroup extends Body {
 			if((f.m_filter.categoryBits & Constants.SHIP_SELECTED_BIT) != 0) {
 				BlockFixtureData data = (BlockFixtureData) f.m_userData;
 				data.owner.setSelected(data.x, data.y);
+				return;
 			}
 		}
 	}
@@ -36,13 +42,13 @@ public class BlockGroup extends Body {
 	int width;
 	int height;
 	double scale;
+
+	//arrays of data
 	int[] blocks;
-	public double[] heat;
-	
-	int[] selected = null;
+	double[] heat;
+	Fixture[] fixtures; //the fixtures array is 2 larger on each axis
 
 	int number;
-	boolean updateRender = false;
 
 	/** Use when building one from scratch */
 	public BlockGroup(int id, double angle, Vec2 position, double scale) {
@@ -54,16 +60,29 @@ public class BlockGroup extends Body {
 		Game.getWorld().createBody(this);
 
 		blocks = new int[] {id};
+		fixtures = new Fixture[9];
 		width = 1;
 		height = 1;
 		this.scale = scale;
 		Block initial = Block.getBlock(id);
-		number = initial.getTextureLayers(0, 0, this);
-		updateRender = initial.isVariableTexture(0, 0, this);
+		number = initial.getTextureLayers(0, 0, this) + 1; //the one is for the selection box, a more sensible system is needed
 
 		FixtureDef fd = initial.getPhysics(0, 0, this);
 		if(fd != null)
 			createFixture(fd);
+	}
+
+	/** The override is so that the fixtures are kept in a data
+	 * structure of my own as well as the body linked list
+	 * this also destroys the old fixture at the location */
+	public Fixture createFixture(FixtureDef fd) {
+		BlockFixtureData bfd = (BlockFixtureData) fd.userData;
+		int index = fi(bfd.x, bfd.y);
+		
+		if(fixtures[index] != null)
+			super.destroyFixture(fixtures[index]);
+			
+		return fixtures[index] = super.createFixture(fd);
 	}
 
 	/** Use when creating BlockGroups from disk or generating existing structures */
@@ -77,12 +96,14 @@ public class BlockGroup extends Body {
 		innit(def);
 		Game.getWorld().createBody(this);
 
+		fixtures = new Fixture[(width + 2) * (height + 2)];
+		
 		blocks = ids;
 		heat = new double[ids.length];
 		this.width = width;
 		this.height = height;
 		this.scale = scale;
-		number = 0;
+		number = 1;
 		FixtureDef fd = null;
 
 		int[] sensors = new int[(width + 2) * (height + 2)];
@@ -90,7 +111,6 @@ public class BlockGroup extends Body {
 		for(int i = 0; i < ids.length; i++) {
 			Block b = Block.getBlock(id(i));
 			number += b.getTextureLayers(x(i), y(i), this);
-			updateRender |= b.isVariableTexture(x(i), y(i), this);
 
 			sensors[x(i) + 2 + (y(i) + 1) * (width + 2)] |= 1;
 			sensors[x(i) + (y(i) + 1) * (width + 2)] |= 1;
@@ -107,13 +127,7 @@ public class BlockGroup extends Body {
 
 		for(int i = 0; i < sensors.length; i++) {
 			if(sensors[i] == 1) {
-				fd = new FixtureDef();
-				fd.shape = new PolygonShape().setAsBox(scale * 0.5, scale * 0.5, new Vec2((i % (width + 2) - 1) * scale, (i / (width + 2) - 1) * scale), 0.0);
-				fd.setSensor(true);
-				fd.filter.categoryBits = Constants.SHIP_SELECTED_BIT;
-				fd.userData = new BlockFixtureData((i % (width + 2)), (i / (width + 2)), this);
-
-				createFixture(fd);
+				createSensor((i % (width + 2)) - 1, (i / (width + 2)) - 1);
 			}
 		}
 	}
@@ -122,7 +136,7 @@ public class BlockGroup extends Body {
 		//copy array
 		double[] next = heat.clone();
 
-		//calculate new vaues from conductance
+		//calculate new values from conductance
 		for(int x = 0; x < width; x++)
 			for(int y = 0; y < height; y++) {
 				Block c = getBlock(x, y);
@@ -148,11 +162,20 @@ public class BlockGroup extends Body {
 	}
 
 	public void setSelected(int x, int y) {
-		selected = new int[] {x, y};
+		if(selected == null || selected.parent != this)
+			number++;
+
+		if(selected != null && selected.parent != this)
+			selected.parent.number--;
+
+		selected = new SelectedBlock(x, y, this);
 	}
 
-	public void unselect() {
-		selected = null;
+	public static void unselect() {
+		if(selected != null) {
+			selected = null;
+			selected.parent.number--;
+		}
 	}
 
 	public double heat(int x, int y) {
@@ -167,41 +190,139 @@ public class BlockGroup extends Body {
 	}
 
 	public void setBlock(int x, int y, int id) {
-		if(x < 0)
+		
+		if(x < 0) {
 			expandLeft(-x);
+			x = 0;
+		}
 
-		if(x >= width)
+		if(x >= width) {
 			expandRight(x - width + 1);
+			x = width - 1;
+		}
 
-		if(y < 0)
+		if(y < 0) {
 			expandDown(-y);
+			y = 0;
+		}
 
-		if(y > 0)
+		if(y > 0) {
 			expandUp(y - height + 1);
+			y = height - 1;
+		}
+
+		number += Block.getBlock(id).getTextureLayers(x, y, this);
 
 		blocks[x + width * y] = id;
+		FixtureDef fd = Block.getBlock(id).getPhysics(x, y, this);
+		createFixture(fd);
+		
+		getBlock(id(x, y + 1)).blockChange(Direction.DOWN);
+		getBlock(id(x, y - 1)).blockChange(Direction.UP);
+		getBlock(id(x + 1, y)).blockChange(Direction.LEFT);
+		getBlock(id(x - 1, y)).blockChange(Direction.RIGHT);
+
+		if(fixtures[fi(x, y + 1)] == null)
+			createSensor(x, y + 1);
+		
+		if(fixtures[fi(x, y - 1)] == null)
+			createSensor(x, y - 1);
+		
+		if(fixtures[fi(x + 1, y)] == null)
+			createSensor(x + 1, y);
+		
+		if(fixtures[fi(x - 1, y)] == null)
+			createSensor(x - 1, y);
+		
+		renderer.resizeBuffer();
 	}
 
+	private void createSensor(int x, int y) {
+		FixtureDef fd = new FixtureDef();
+		fd.shape = new PolygonShape().setAsBox(scale * 0.5, scale * 0.5, new Vec2(x * scale, y * scale), 0.0);
+		fd.setSensor(true);
+		fd.filter.categoryBits = Constants.SHIP_SELECTED_BIT;
+		fd.userData = new BlockFixtureData(x, y, this);
+
+		createFixture(fd);
+	}
+	
 	public void expandUp(int amount) {
 		heat = Arrays.copyOf(heat, amount * width + heat.length);
 		blocks = Arrays.copyOf(blocks, blocks.length + amount * width);
+		fixtures = Arrays.copyOf(fixtures, fixtures.length + amount * (width + 2));
 		height += amount;
 	}
 
 	public void expandDown(int amount) {
 		double[] newHeat = new double[amount * width + heat.length];
 		System.arraycopy(heat, 0, newHeat, amount * width, heat.length);
-		double[] newBlocks = new double[amount * width + blocks.length];
+		int[] newBlocks = new int[amount * width + blocks.length];
 		System.arraycopy(blocks, 0, newBlocks, amount * width, blocks.length);
+		Fixture[] newFixtures = new Fixture[amount * (width + 2) + fixtures.length];
+		System.arraycopy(fixtures, 0, newFixtures, amount * (width + 2), fixtures.length);
 		height += amount;
+		heat = newHeat;
+		blocks = newBlocks;
+		fixtures = newFixtures;
+
+		Fixture next = super.getFixtureList();
+
+		while(next != null) {
+			BlockFixtureData bfd = (BlockFixtureData) next.getUserData();
+			bfd.y++;
+			next = next.getNext();
+		}
 	}
 
 	public void expandLeft(int amount) {
+		double[] newHeat = new double[amount * height + heat.length];
+		int[] newBlocks = new int[amount * height + heat.length];
+		Fixture[] newFixtures = new Fixture[amount * (height + 2) + fixtures.length];
+		
+		for(int row = 0; row < height; row++) {
+			System.arraycopy(heat, row * width, newHeat, row * (width + amount) + amount, width);
+			System.arraycopy(blocks, row * width, newBlocks, row * (width + amount) + amount, width);
+			System.arraycopy(fixtures, row * (width + 2), newFixtures, row * (width + amount + 2) + amount, width + 2);
+		}
+		
+		System.arraycopy(fixtures, height * (width + 2), newFixtures, height * (width + amount + 2) + amount, width + 2);
+		System.arraycopy(fixtures, (height + 1) * (width + 2), newFixtures, (height + 1) * (width + amount + 2) + amount, width + 2);
+		
+		fixtures = newFixtures;
+		blocks = newBlocks;
+		heat = newHeat;
+		
+		width += amount;
 
+		Fixture next = super.getFixtureList();
+
+		while(next != null) {
+			BlockFixtureData bfd = (BlockFixtureData) next.getUserData();
+			bfd.x++;
+			next = next.getNext();
+		}
 	}
 
 	public void expandRight(int amount) {
+		double[] newHeat = new double[amount * height + heat.length];
+		int[] newBlocks = new int[amount * height + heat.length];
+		Fixture[] newFixtures = new Fixture[amount * (height + 2) + fixtures.length];
+		
+		for(int row = 0; row < height; row++) {
+			System.arraycopy(heat, row * width, newHeat, row * (width + amount), width);
+			System.arraycopy(blocks, row * width, newBlocks, row * (width + amount), width);
+			System.arraycopy(fixtures, row * (width + 2), newFixtures, row * (width + 2 + amount), width + 2);
+		}
 
+		System.arraycopy(fixtures, height * (width + 2), newFixtures, height * (width + 2 + amount), width + 2);
+		System.arraycopy(fixtures, (height + 1) * (width + 2), newFixtures, (height + 1) * (width + 2 + amount), width + 2);
+		
+		blocks = newBlocks;
+		heat = newHeat;
+		fixtures = newFixtures;
+		
+		width += amount;
 	}
 
 	public double rawHeat(int x, int y) {
@@ -230,6 +351,15 @@ public class BlockGroup extends Body {
 		return index / width;
 	}
 
+	int i(int x, int y) {
+		return x + width * y;
+	}
+
+	/** Used for indexing the fixture array */
+	int fi(int x, int y) {
+		return (x + 1) + (width + 2) * (y + 1);
+	}
+
 	public long getUpdateOffset() {
 		return 0; //OPTI implement subBuffer updates
 	}
@@ -249,6 +379,7 @@ public class BlockGroup extends Body {
 	public int[] getRenderData() {
 		int[] result = new int[number * 6];
 		int index = 0;
+
 		for(int i = 0; i < blocks.length; i++) {
 			for(int[] texture : getBlock(i).getTextures(x(i), y(i), this)) {
 				result[index++] = x(i);
@@ -258,6 +389,15 @@ public class BlockGroup extends Body {
 				result[index++] = texture[2];
 				result[index++] = Float.floatToRawIntBits((float) (heat[i] / (heat[i] + 1000)));
 			}
+		}
+
+		if(selected != null && selected.parent == this) {
+			result[index++] = selected.x;
+			result[index++] = selected.y;
+			result[index++] = BlockGroupRenderer.SELECTED_TEXTURE;
+			result[index++] = 0;
+			result[index++] = 0;
+			result[index++] = 0;
 		}
 
 		return result;

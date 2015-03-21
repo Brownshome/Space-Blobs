@@ -1,4 +1,4 @@
-#version 440
+#version 430
 
 layout(location = 0) in vec2 pos;
 layout(location = 1) in vec4 dims; //x0 x1, y0, y1
