@@ -6,6 +6,9 @@ import physics.dynamics.FixtureDef;
 public class Empty extends Block {
 
 	@Override
+	public int getID(int x, int y, BlockGroup parent) { return 0; }
+	
+	@Override
 	public FixtureDef getPhysics(int x, int y, BlockGroup parent) { return null; }
 
 	@Override

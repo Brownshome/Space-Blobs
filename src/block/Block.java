@@ -2,6 +2,7 @@ package block;
 
 import java.util.ArrayList;
 
+import physics.common.Vec2;
 import physics.dynamics.FixtureDef;
 
 public abstract class Block {
@@ -67,5 +68,9 @@ public abstract class Block {
 	/** Gets the heat, the default method is to read the data from the blockgroup */
 	public abstract double getHeat(int x, int y, BlockGroup parent);
 	/** Called whenever a neighboring block changes */
-	public void blockChange(Direction down) {}
+	public void blockChange(Direction down, int x, int y, BlockGroup parent) {}
+	/** Called when a block is created, the point is a relative point to (0, 0) to allow blocks to change type depending on where they are clicked */
+	public int getID(Vec2 point, int x, int y, BlockGroup parent) { return getID(x, y, parent); }
+	/** Called when created without an appropriate position */
+	public abstract int getID(int x, int y, BlockGroup parent);
 }

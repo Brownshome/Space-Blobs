@@ -94,7 +94,7 @@ public class KeyIO {
 		return id++;
 	}
 
-	public static void poll() {
+	public static void tick() {
 		// Using poll as a 1 tick updater
 		if(request == null || !request.blockInput) {
 			dx = Mouse.getDX();

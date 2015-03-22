@@ -1,16 +1,14 @@
 package main;
 
 import io.user.Console;
-import io.user.KeyBinds;
 import io.user.KeyIO;
-import mob.Player;
+import io.user.click.ClickMode;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
 
 import physics.collision.shapes.PolygonShape;
-import physics.common.Color;
 import physics.common.Settings;
 import physics.common.Vec2;
 import physics.dynamics.BodyDef;
@@ -56,16 +54,13 @@ public class Game {
 		PolygonShape shape = new PolygonShape();
 		shape.setAsBox(1.0, 1.0);
 		
-		BlockGroup bg1 = new BlockGroup(grid, 1, 1, 0.0, new Vec2(-0.5, 0.5), 0.2, new Vec2());
+		BlockGroup bg1 = new BlockGroup(grid, 1, 1, 0.0, new Vec2(1.0, 0.0), 0.2, new Vec2());
 		
 		world.setDebugDraw(PhysRenderer.INSTANCE);
 		world.setContactListener(ContactResponse.INSTANCE);
 		
 		BlockGroupRenderer bgr1 = new BlockGroupRenderer(bg1);
 		bgr1.setupRender();
-		
-		Player p = new Player(new Vec2());
-		p.setControlled();
 		
 		GUI.setDebug(true);
 		TextRenderer.initialize("kristen");
@@ -74,24 +69,19 @@ public class Game {
 			Display.update();
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
 			
-			world.drawDebugData();
-			
-			Vec2 q = KeyBinds.getMousePos();
-			LineRenderer.draw(q.add(-0.1, 0.0), q.add(0.1, 0.0), Color.WHITE);
-			LineRenderer.draw(q.add(0.0, -0.1), q.add(0.0, 0.1), Color.WHITE);
+			world.step(Settings.DELTA, 8, 8);
 			
 			frameClock.tick();
-			KeyIO.poll();
+			ClickMode.tick();
+			KeyIO.tick();
 			GUI.INSTANCE.tick();
-			
-			world.step(Settings.DELTA, 8, 8);
-			p.tick();
 			
 			bg1.tickHeat();
 			bgr1.render();
 			
 			TextRenderer.render();
 			LineRenderer.render();
+			//world.drawDebugData();
 
 			Renderer.checkGL();
 		}
@@ -99,6 +89,7 @@ public class Game {
 	
 	private static void innit() {
 		Renderer.initialize();
+		ClickMode.initialize();
 		KeyIO.addAction(() -> exitFlag = true, Keyboard.KEY_ESCAPE, KeyIO.KEY_PRESSED);
 		KeyIO.addAction(() -> GUI.setDebug(!GUI.debug), Keyboard.KEY_F3, KeyIO.KEY_PRESSED);
 	}

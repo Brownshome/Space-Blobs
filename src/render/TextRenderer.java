@@ -13,8 +13,6 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 import org.newdawn.slick.opengl.PNGDecoder;
 
-import com.sun.glass.ui.Pixels.Format;
-
 import physics.common.Vec2;
 
 public class TextRenderer {

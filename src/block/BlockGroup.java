@@ -2,10 +2,6 @@ package block;
 
 import java.util.Arrays;
 
-import org.lwjgl.input.Keyboard;
-
-import io.user.KeyBinds;
-import io.user.KeyIO;
 import main.Game;
 import physics.collision.shapes.PolygonShape;
 import physics.common.Settings;
@@ -20,28 +16,12 @@ import physics.link.Constants;
 public class BlockGroup extends Body {
 	static SelectedBlock selected;
 
-	static {
-		KeyBinds.add(BlockGroup::mouseClick, 0, KeyIO.MOUSE_BUTTON_PRESSED, "block.select");
-		KeyBinds.add(() -> {if(selected != null) selected.parent.setBlock(selected.x, selected.y, 2);}, Keyboard.KEY_RETURN, KeyIO.KEY_PRESSED, "block.place");
-	}
-
-	static void mouseClick() {
-		Fixture[] list = new PointTest(KeyBinds.getMousePos()).getFixtures();
-		for(Fixture f : list) {
-			if((f.m_filter.categoryBits & Constants.SHIP_SELECTED_BIT) != 0) {
-				BlockFixtureData data = (BlockFixtureData) f.m_userData;
-				data.owner.setSelected(data.x, data.y);
-				return;
-			}
-		}
-	}
-
 	BlockGroupRenderer renderer;
 
 	//used variables, need synchronization if multithreadedness happens
-	int width;
-	int height;
-	double scale;
+	public int width;
+	public int height;
+	public double scale;
 
 	//arrays of data
 	int[] blocks;
@@ -178,8 +158,8 @@ public class BlockGroup extends Body {
 
 	public static void unselect() {
 		if(selected != null) {
-			selected = null;
 			selected.parent.number--;
+			selected = null;
 		}
 	}
 
@@ -223,10 +203,10 @@ public class BlockGroup extends Body {
 		FixtureDef fd = Block.getBlock(id).getPhysics(x, y, this);
 		createFixture(fd);
 		
-		getBlock(id(x, y + 1)).blockChange(Direction.DOWN);
-		getBlock(id(x, y - 1)).blockChange(Direction.UP);
-		getBlock(id(x + 1, y)).blockChange(Direction.LEFT);
-		getBlock(id(x - 1, y)).blockChange(Direction.RIGHT);
+		getBlock(id(x, y + 1)).blockChange(Direction.DOWN, x, y + 1, this);
+		getBlock(id(x, y - 1)).blockChange(Direction.UP, x, y - 1, this);
+		getBlock(id(x + 1, y)).blockChange(Direction.LEFT, x + 1, y, this);
+		getBlock(id(x - 1, y)).blockChange(Direction.RIGHT, x - 1, y, this);
 
 		if(fixtures[fi(x, y + 1)] == null)
 			createSensor(x, y + 1);

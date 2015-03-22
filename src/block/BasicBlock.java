@@ -15,6 +15,9 @@ public class BasicBlock extends Block {
 	}
 	
 	@Override
+	public int getID(int x, int y, BlockGroup parent) { return id; }
+	
+	@Override
 	public int[][] getTextures(int x, int y, BlockGroup parent) { return texture; }
 
 	@Override
