@@ -24,6 +24,7 @@ public abstract class Block {
 		BASIC_BLOCKS[2] = new BasicBlock(2, BlockGroupRenderer.BLUE_HULL);
 		
 		DATA_BLOCKS[0] = new HeatingBlock();
+		DATA_BLOCKS[1] = new CornerBlock();
 	}
 	
 	//error checking is not performed, so get your ID right
@@ -45,6 +46,10 @@ public abstract class Block {
 	/** Only the last 22 bits of data are used */
 	public static int toDataBlockID(int id, int data) {
 		return BASIC_BLOCKS.length + id * DATA_BLOCK_SIZE + data;
+	}
+	
+	public static int toDataBlockID(int id) {
+		return BASIC_BLOCKS.length + id * DATA_BLOCK_SIZE;
 	}
 	
 	public static int toData(int id) {

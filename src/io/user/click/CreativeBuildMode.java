@@ -7,7 +7,7 @@ import block.BlockFixtureData;
 import block.BlockGroup;
 
 public class CreativeBuildMode extends ClickMode {
-	int id = 2;
+	int id = 2;//Block.toDataBlockID(1);
 	
 	CreativeBuildMode() {
 		super("clickmode.creativebuild", 16, 16);

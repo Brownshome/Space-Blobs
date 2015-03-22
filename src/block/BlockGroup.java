@@ -175,7 +175,6 @@ public class BlockGroup extends Body {
 	}
 
 	public void setBlock(int x, int y, int id) {
-		
 		if(x < 0) {
 			expandLeft(-x);
 			x = 0;
@@ -197,9 +196,11 @@ public class BlockGroup extends Body {
 		}
 
 		number -= getBlock(x, y).getTextureLayers(x, y, this);
+		
+		blocks[x + width * y] = id;
+		
 		number += Block.getBlock(id).getTextureLayers(x, y, this);
 
-		blocks[x + width * y] = id;
 		FixtureDef fd = Block.getBlock(id).getPhysics(x, y, this);
 		createFixture(fd);
 		
