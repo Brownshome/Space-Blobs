@@ -11,9 +11,11 @@ import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
+import org.newdawn.slick.opengl.PNGDecoder;
+
+import com.sun.glass.ui.Pixels.Format;
 
 import physics.common.Vec2;
-import de.matthiasmann.twl.utils.PNGDecoder.Format;
 
 public class TextRenderer {
 	static final int GRID_SIZE = 16;
@@ -75,7 +77,7 @@ public class TextRenderer {
 
 		//load the texture file
 		TEXTURE = Renderer.getTextureID();
-		Texture fontSheet = new Texture("fonts/" + fontName, Format.RGBA);
+		Texture fontSheet = new Texture("fonts/" + fontName, PNGDecoder.RGBA);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, TEXTURE);
 		//TODO explore using GL42.glTexStorage2D
 		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, fontSheet.width, fontSheet.width, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, fontSheet.data);

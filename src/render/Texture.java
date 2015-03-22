@@ -8,9 +8,8 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import org.lwjgl.BufferUtils;
-
-import de.matthiasmann.twl.utils.PNGDecoder;
-import de.matthiasmann.twl.utils.PNGDecoder.Format;
+import org.newdawn.slick.opengl.PNGDecoder;
+import org.newdawn.slick.opengl.PNGDecoder.Format;
 
 public class Texture {
 	public int width;

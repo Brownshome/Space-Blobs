@@ -16,10 +16,10 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL33;
 import org.lwjgl.opengl.GL42;
+import org.newdawn.slick.opengl.PNGDecoder;
 
 import render.Renderer;
 import render.Texture;
-import de.matthiasmann.twl.utils.PNGDecoder.Format;
 
 /** Handles the visual representation of a blockgroup */
 
@@ -78,7 +78,7 @@ public class BlockGroupRenderer {
 
 		HEAT = Renderer.getTextureID();
 		GL11.glBindTexture(GL11.GL_TEXTURE_1D, HEAT);
-		Texture texture = new Texture("heatcolour", Format.BGRA);
+		Texture texture = new Texture("heatcolour", PNGDecoder.BGRA);
 		GL11.glTexImage1D(GL11.GL_TEXTURE_1D, 0, GL11.GL_RGBA, 256, 0, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, texture.data);
 
 		GL11.glTexParameteri(GL11.GL_TEXTURE_1D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
@@ -204,7 +204,7 @@ public class BlockGroupRenderer {
 
 		Texture texture;
 		for(int i = 0; i < TEXTURE_NAMES.size(); i++) {
-			texture = new Texture(TEXTURE_NAMES.get(i), Format.BGRA);
+			texture = new Texture(TEXTURE_NAMES.get(i), PNGDecoder.BGRA);
 
 			if(texture.width != TEXTURE_SIZE || texture.height != TEXTURE_SIZE)
 				Console.error("Texture " + TEXTURE_NAMES.get(i) + " is the wrong size.", "TEXTURE LOAD");
