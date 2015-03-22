@@ -53,13 +53,9 @@ public class Rot implements Serializable {
 	public double getSin() {
 		return s;
 	}
-	
-	/**
-	 * Calculate the conjugate of this doublet.
-	 */
 
-	public Rot conj() {
-		return new Rot(s, -c);
+	public Rot inverse() {
+		return new Rot(-s, c);
 	}
 
 	@Override

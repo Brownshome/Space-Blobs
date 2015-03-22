@@ -82,6 +82,13 @@ public class Transform implements Serializable {
 		q.setIdentity();
 	}
 
+	public Transform invert() {
+		Vec2 newP = p.clone();
+		Rot.mulToOut(q, p, newP);
+		newP.negateLocal();
+		return new Transform(newP, q.inverse());
+	}
+	
 	public final static Vec2 mul(final Transform T, final Vec2 v) {
 		return new Vec2((T.q.c * v.x - T.q.s * v.y) + T.p.x, (T.q.s * v.x + T.q.c * v.y) + T.p.y);
 	}
