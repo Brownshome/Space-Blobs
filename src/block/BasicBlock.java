@@ -11,7 +11,7 @@ public class BasicBlock extends Block {
 	
 	public BasicBlock(int id, int texture) {
 		this.id = id;
-		this.texture = new int[][] {{texture, 0, 0}};
+		this.texture = new int[][] {{texture, 0, 0, 0}};
 	}
 	
 	@Override

@@ -52,7 +52,7 @@ public abstract class Block {
 	
 	/** Returns the physical fixture pertaining to this block, return null is valid */
 	public abstract FixtureDef getPhysics(int x, int y, BlockGroup parent);
-	/** Returns the array of textures to render, the indexs should be quereied at runtime and not hardcoded, in the order that they render, 2 textures and a lerp value */
+	/** Returns the array of textures to render, the indexs should be quereied at runtime and not hardcoded, in the order that they render, 2 textures, a lerp value and a rotation value */
 	public abstract int[][] getTextures(int x, int y, BlockGroup parent);
 	/** Return true if the block textures change, note that the number of textures cannot change*/
 	public boolean isVariableTexture(int x, int y, BlockGroup parent) { return false; }

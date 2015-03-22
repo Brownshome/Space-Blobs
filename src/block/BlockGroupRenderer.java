@@ -39,6 +39,7 @@ import de.matthiasmann.twl.utils.PNGDecoder.Format;
 public class BlockGroupRenderer {
 	static final int TEXTURE_SIZE = 64;
 	static final int MIPMAP_LEVELS = 32 - Integer.numberOfLeadingZeros(TEXTURE_SIZE);
+	static final int BLOCK_DATA_SIZE = 7;
 
 	static final float[] PER_VERTEX = new float[] {
 		//pos
@@ -108,8 +109,7 @@ public class BlockGroupRenderer {
 		VAO = Renderer.getVertexArrayID();
 		GPUData = Renderer.getBufferID();
 		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, GPUData);
-		int[] array = parent.getRenderData();
-		GL15.glBufferData(GL15.GL_ARRAY_BUFFER, parent.number * 6 * Float.BYTES, GL15.GL_DYNAMIC_DRAW);
+		GL15.glBufferData(GL15.GL_ARRAY_BUFFER, parent.number * BLOCK_DATA_SIZE * Float.BYTES, GL15.GL_DYNAMIC_DRAW);
 
 		GL30.glBindVertexArray(VAO);
 
@@ -119,18 +119,22 @@ public class BlockGroupRenderer {
 		GL20.glEnableVertexAttribArray(2);	//position in grid
 		GL20.glEnableVertexAttribArray(3);  //texture lerp
 		GL20.glEnableVertexAttribArray(4);  //heat level
+		GL20.glEnableVertexAttribArray(5);  //texture rotation
 
-		GL30.glVertexAttribIPointer(1, 2, GL11.GL_INT, 24, 8);
+		GL30.glVertexAttribIPointer(1, 2, GL11.GL_INT, 28, 8);
 		GL33.glVertexAttribDivisor(1, 1);
 
-		GL20.glVertexAttribPointer(3, 1, GL11.GL_FLOAT, false, 24, 16);
+		GL20.glVertexAttribPointer(3, 1, GL11.GL_FLOAT, false, 28, 16);
 		GL33.glVertexAttribDivisor(3, 1);
 
-		GL20.glVertexAttribPointer(4, 1, GL11.GL_FLOAT, false, 24, 20);
+		GL20.glVertexAttribPointer(4, 1, GL11.GL_FLOAT, false, 28, 20);
 		GL33.glVertexAttribDivisor(4, 1);
 
-		GL30.glVertexAttribIPointer(2, 2, GL11.GL_INT, 24, 0);
+		GL30.glVertexAttribIPointer(2, 2, GL11.GL_INT, 28, 0);
 		GL33.glVertexAttribDivisor(2, 1);
+
+		GL30.glVertexAttribIPointer(5, 1, GL11.GL_INT, 28, 24); //R: n * PI / 2 clockwise
+		GL33.glVertexAttribDivisor(5, 1);
 
 		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, VBO);
 		GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, 0, 0);
@@ -176,7 +180,7 @@ public class BlockGroupRenderer {
 
 	public void resizeBuffer() {
 		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, GPUData);
-		GL15.glBufferData(GL15.GL_ARRAY_BUFFER, parent.number * 6 * Float.BYTES, GL15.GL_DYNAMIC_DRAW);
+		GL15.glBufferData(GL15.GL_ARRAY_BUFFER, parent.number * BLOCK_DATA_SIZE * Float.BYTES, GL15.GL_DYNAMIC_DRAW);
 	}
 	
 	/** ID clashes are not checked, be sure or pay the price */

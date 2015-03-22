@@ -391,7 +391,7 @@ public class BlockGroup extends Body {
 	}
 
 	public int[] getRenderData() {
-		int[] result = new int[number * 6];
+		int[] result = new int[number * BlockGroupRenderer.BLOCK_DATA_SIZE];
 		int index = 0;
 
 		for(int i = 0; i < blocks.length; i++) {
@@ -402,6 +402,7 @@ public class BlockGroup extends Body {
 				result[index++] = texture[1];
 				result[index++] = texture[2];
 				result[index++] = Float.floatToRawIntBits((float) (heat[i] / (heat[i] + 1000)));
+				result[index++] = texture[3];
 			}
 		}
 
@@ -409,6 +410,7 @@ public class BlockGroup extends Body {
 			result[index++] = selected.x + xoffset;
 			result[index++] = selected.y + yoffset;
 			result[index++] = BlockGroupRenderer.SELECTED_TEXTURE;
+			result[index++] = 0;
 			result[index++] = 0;
 			result[index++] = 0;
 			result[index++] = 0;
