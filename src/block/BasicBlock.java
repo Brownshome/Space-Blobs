@@ -38,7 +38,7 @@ public class BasicBlock extends Block {
 		fd.filter.categoryBits = Constants.SHIP_BIT | Constants.SHIP_SELECTED_BIT;
 		fd.friction = 0.3;
 		fd.restitution = 0.9;
-		fd.shape = new PolygonShape().setAsBox(parent.scale * 0.5, parent.scale * 0.5, new Vec2(x * parent.scale, y * parent.scale), 0.0);
+		fd.shape = new PolygonShape().setAsBox(parent.scale * 0.5, parent.scale * 0.5, new Vec2((x + parent.xoffset) * parent.scale, (y + parent.yoffset) * parent.scale), 0.0);
 		fd.density = 10.0;
 		fd.userData = new BlockFixtureData(x, y, parent);
 		return fd;

@@ -47,6 +47,10 @@ public class BlockGroup extends Body {
 	int[] blocks;
 	double[] heat;
 	Fixture[] fixtures; //the fixtures array is 2 larger on each axis
+	
+	//fixture creation offset
+	int xoffset = 0;
+	int yoffset = 0;
 
 	int number;
 
@@ -75,6 +79,7 @@ public class BlockGroup extends Body {
 	/** The override is so that the fixtures are kept in a data
 	 * structure of my own as well as the body linked list
 	 * this also destroys the old fixture at the location */
+	@Override
 	public Fixture createFixture(FixtureDef fd) {
 		BlockFixtureData bfd = (BlockFixtureData) fd.userData;
 		int index = fi(bfd.x, bfd.y);
@@ -206,11 +211,12 @@ public class BlockGroup extends Body {
 			y = 0;
 		}
 
-		if(y > 0) {
+		if(y >= height) {
 			expandUp(y - height + 1);
 			y = height - 1;
 		}
 
+		number -= getBlock(x, y).getTextureLayers(x, y, this);
 		number += Block.getBlock(id).getTextureLayers(x, y, this);
 
 		blocks[x + width * y] = id;
@@ -239,7 +245,7 @@ public class BlockGroup extends Body {
 
 	private void createSensor(int x, int y) {
 		FixtureDef fd = new FixtureDef();
-		fd.shape = new PolygonShape().setAsBox(scale * 0.5, scale * 0.5, new Vec2(x * scale, y * scale), 0.0);
+		fd.shape = new PolygonShape().setAsBox(scale * 0.5, scale * 0.5, new Vec2((x + xoffset) * scale, (y + yoffset) * scale), 0.0);
 		fd.setSensor(true);
 		fd.filter.categoryBits = Constants.SHIP_SELECTED_BIT;
 		fd.userData = new BlockFixtureData(x, y, this);
@@ -267,6 +273,10 @@ public class BlockGroup extends Body {
 		fixtures = newFixtures;
 
 		Fixture next = super.getFixtureList();
+		yoffset--;
+		
+		if(selected != null && selected.parent == this)
+			selected.y++;
 
 		while(next != null) {
 			BlockFixtureData bfd = (BlockFixtureData) next.getUserData();
@@ -294,6 +304,10 @@ public class BlockGroup extends Body {
 		heat = newHeat;
 		
 		width += amount;
+		xoffset--;
+		
+		if(selected != null && selected.parent == this)
+			selected.x++;
 
 		Fixture next = super.getFixtureList();
 
@@ -382,8 +396,8 @@ public class BlockGroup extends Body {
 
 		for(int i = 0; i < blocks.length; i++) {
 			for(int[] texture : getBlock(i).getTextures(x(i), y(i), this)) {
-				result[index++] = x(i);
-				result[index++] = y(i);
+				result[index++] = x(i) + xoffset;
+				result[index++] = y(i) + yoffset;
 				result[index++] = texture[0];
 				result[index++] = texture[1];
 				result[index++] = texture[2];
@@ -392,8 +406,8 @@ public class BlockGroup extends Body {
 		}
 
 		if(selected != null && selected.parent == this) {
-			result[index++] = selected.x;
-			result[index++] = selected.y;
+			result[index++] = selected.x + xoffset;
+			result[index++] = selected.y + yoffset;
 			result[index++] = BlockGroupRenderer.SELECTED_TEXTURE;
 			result[index++] = 0;
 			result[index++] = 0;
