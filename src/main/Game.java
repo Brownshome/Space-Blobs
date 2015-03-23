@@ -21,12 +21,14 @@ import render.Renderer;
 import render.TextRenderer;
 import time.Clock;
 import ui.GUI;
+import block.Block;
 import block.BlockGroup;
 import block.BlockGroupRenderer;
 
 public class Game {
 	public static final int CLOCK_WARM_UP = 2000;
 	public static volatile boolean exitFlag = false;
+	public static boolean drawPhys = false;
 	public static Clock frameClock = new Clock();
 	public static World world = new World(new Vec2());
 	
@@ -44,7 +46,7 @@ public class Game {
 
 	static void mainLoop() {
 		int[] grid = new int[] {
-			1
+			Block.toDataBlockID(1, 0), Block.toDataBlockID(1, 1), Block.toDataBlockID(1, 2), Block.toDataBlockID(1, 3)
 		};
 		
 		BodyDef bd = new BodyDef();
@@ -54,7 +56,7 @@ public class Game {
 		PolygonShape shape = new PolygonShape();
 		shape.setAsBox(1.0, 1.0);
 		
-		BlockGroup bg1 = new BlockGroup(grid, 1, 1, 0.0, new Vec2(1.0, 0.0), 0.2, new Vec2());
+		BlockGroup bg1 = new BlockGroup(grid, 4, 1, 0.0, new Vec2(), 0.2, new Vec2());
 		
 		world.setDebugDraw(PhysRenderer.INSTANCE);
 		world.setContactListener(ContactResponse.INSTANCE);
@@ -81,7 +83,9 @@ public class Game {
 			
 			TextRenderer.render();
 			LineRenderer.render();
-			//world.drawDebugData();
+			
+			if(drawPhys)
+				world.drawDebugData();
 
 			Renderer.checkGL();
 		}
@@ -92,6 +96,7 @@ public class Game {
 		ClickMode.initialize();
 		KeyIO.addAction(() -> exitFlag = true, Keyboard.KEY_ESCAPE, KeyIO.KEY_PRESSED);
 		KeyIO.addAction(() -> GUI.setDebug(!GUI.debug), Keyboard.KEY_F3, KeyIO.KEY_PRESSED);
+		KeyIO.addAction(() -> drawPhys = !drawPhys, Keyboard.KEY_F4, KeyIO.KEY_PRESSED);
 	}
 
 	public static void cleanup() {
