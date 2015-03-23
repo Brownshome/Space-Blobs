@@ -21,6 +21,9 @@ public class Empty extends Block {
 	public int getTextureLayers(int x, int y, BlockGroup parent) { return 0; }
 
 	@Override
+	public boolean canBePlaced(Direction dir, int block, int x, int y, BlockGroup parent) { return false; }
+	
+	@Override
 	public double getHeatCapacity(int x, int y, BlockGroup parent) { return Double.POSITIVE_INFINITY; }
 
 	@Override

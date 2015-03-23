@@ -179,6 +179,7 @@ public class BlockGroup extends Body {
 		return getBlock(i).getHeat(x(i), y(i), this);
 	}
 
+	/** This method checks for connectivity, to build bulk structures use the bulk method, to remove use removeBlock() */
 	public void setBlock(int x, int y, int id) {
 		Block block = Block.getBlock(id);
 		
@@ -222,7 +223,7 @@ public class BlockGroup extends Body {
 		getBlock(id(x - 1, y)).blockChange(Direction.RIGHT, x - 1, y, this);
 
 		if(fd != null) {
-			if(fixtures[fi(x, y + 1)] == null && block.canBePlaced(Direction.UP, 0, x, y, this));
+			if(fixtures[fi(x, y + 1)] == null && block.canBePlaced(Direction.UP, 0, x, y, this))
 				createSensor(x, y + 1);
 
 			if(fixtures[fi(x, y - 1)] == null && block.canBePlaced(Direction.DOWN, 0, x, y, this))
@@ -236,11 +237,15 @@ public class BlockGroup extends Body {
 		}
 
 		renderer.resizeBuffer();
+		
+		//TODO break object into multiple parts.
+		//TODO remove sensors that no longer are possible
 	}
 
 	/** warning this does change block for a small period of time */
 	public boolean checkCanBePlaced(int x, int y, int id) {
 		int old = id(x, y);
+		blocks[i(x, y)] = id;
 		Block test = getBlock(x, y);
 
 		if(getBlock(x, y + 1).canBePlaced(Direction.DOWN, id, x, y + 1, this) && test.canBePlaced(Direction.UP, id(x, y + 1), x, y, this)) {
@@ -263,6 +268,7 @@ public class BlockGroup extends Body {
 			return true;
 		}
 
+		blocks[i(x, y)] = old;
 		return false;
 	}
 

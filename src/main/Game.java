@@ -46,7 +46,7 @@ public class Game {
 
 	static void mainLoop() {
 		int[] grid = new int[] {
-			Block.toDataBlockID(1, 0), Block.toDataBlockID(1, 1), Block.toDataBlockID(1, 2), Block.toDataBlockID(1, 3)
+			1
 		};
 		
 		BodyDef bd = new BodyDef();
@@ -56,7 +56,7 @@ public class Game {
 		PolygonShape shape = new PolygonShape();
 		shape.setAsBox(1.0, 1.0);
 		
-		BlockGroup bg1 = new BlockGroup(grid, 4, 1, 0.0, new Vec2(), 0.2, new Vec2());
+		BlockGroup bg1 = new BlockGroup(grid, 1, 1, 0.0, new Vec2(), 0.2, new Vec2());
 		
 		world.setDebugDraw(PhysRenderer.INSTANCE);
 		world.setContactListener(ContactResponse.INSTANCE);
