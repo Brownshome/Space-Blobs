@@ -64,8 +64,9 @@ public abstract class Block {
 	public boolean isVariableTexture(int x, int y, BlockGroup parent) { return false; }
 	/** Return the number of textures to render, this cannot change once called or BAD THINGS (tm) will happen*/
 	public int getTextureLayers(int x, int y, BlockGroup parent) { return 1; }
-	/** Returns if the block is solid on the face, used in culling the physics mesh among other things*/
-	public boolean isSideSolid(Direction dir, int x, int y, BlockGroup parent) { return true; }
+	/** Returns if 'block' can be placed onto this side, don't worry about the shape of the other block, the other block's method is used for that
+	 * if id = 0 return if the side is ever placable on */
+	public boolean canBePlaced(Direction dir, int block, int x, int y, BlockGroup parent) { return true; }
 	/** Returns the heat transfer rate in unit of difference per units per second  */
 	public abstract double getHeatResistivity(int x, int y, BlockGroup parent);
 	/** How many units of heat it takes to change one unit of tempurature in the block */

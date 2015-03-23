@@ -27,10 +27,10 @@ public class BlockGroup extends Body {
 	int[] blocks;
 	double[] heat;
 	Fixture[] fixtures; //the fixtures array is 2 larger on each axis
-	
+
 	//fixture creation offset
-	int xoffset = 0;
-	int yoffset = 0;
+	public int xoffset = 0;
+	public int yoffset = 0;
 
 	int number;
 
@@ -63,10 +63,10 @@ public class BlockGroup extends Body {
 	public Fixture createFixture(FixtureDef fd) {
 		BlockFixtureData bfd = (BlockFixtureData) fd.userData;
 		int index = fi(bfd.x, bfd.y);
-		
+
 		if(fixtures[index] != null)
 			super.destroyFixture(fixtures[index]);
-			
+
 		return fixtures[index] = super.createFixture(fd);
 	}
 
@@ -82,7 +82,7 @@ public class BlockGroup extends Body {
 		Game.getWorld().createBody(this);
 
 		fixtures = new Fixture[(width + 2) * (height + 2)];
-		
+
 		blocks = ids;
 		heat = new double[ids.length];
 		this.width = width;
@@ -91,22 +91,27 @@ public class BlockGroup extends Body {
 		number = 1;
 		FixtureDef fd = null;
 
+		//(0, 0) is at 1, 1
 		int[] sensors = new int[(width + 2) * (height + 2)];
 
 		for(int i = 0; i < ids.length; i++) {
 			Block b = Block.getBlock(id(i));
 			number += b.getTextureLayers(x(i), y(i), this);
 
-			sensors[x(i) + 2 + (y(i) + 1) * (width + 2)] |= 1;
-			sensors[x(i) + (y(i) + 1) * (width + 2)] |= 1;
-			sensors[x(i) + 1 + (y(i) + 2) * (width + 2)] |= 1;
-			sensors[x(i) + 1 + y(i) * (width + 2)] |= 1;
+			if(b.canBePlaced(Direction.RIGHT, 0, x(i), y(i), this))
+				sensors[fi(x(i) + 1, y(i))] |= 1;
+			if(b.canBePlaced(Direction.LEFT, 0, x(i), y(i), this))
+				sensors[fi(x(i) - 1, y(i))] |= 1;
+			if(b.canBePlaced(Direction.UP, 0, x(i), y(i), this))
+				sensors[fi(x(i), y(i) + 1)] |= 1;
+			if(b.canBePlaced(Direction.DOWN, 0, x(i), y(i), this))
+				sensors[fi(x(i), y(i) - 1)] |= 1;
 
 			fd = b.getPhysics(x(i), y(i), this);
 
 			if(fd != null) {
 				createFixture(fd);
-				sensors[x(i) + y(i) * (width + 2)] = 2;
+				sensors[fi(x(i), y(i))] = 2;
 			}
 		}
 
@@ -175,6 +180,8 @@ public class BlockGroup extends Body {
 	}
 
 	public void setBlock(int x, int y, int id) {
+		Block block = Block.getBlock(id);
+		
 		if(x < 0) {
 			expandLeft(-x);
 			x = 0;
@@ -195,33 +202,68 @@ public class BlockGroup extends Body {
 			y = height - 1;
 		}
 
-		number -= getBlock(x, y).getTextureLayers(x, y, this);
-		
-		blocks[x + width * y] = id;
-		
-		number += Block.getBlock(id).getTextureLayers(x, y, this);
+		if(!checkCanBePlaced(x, y, id))
+			return;
 
-		FixtureDef fd = Block.getBlock(id).getPhysics(x, y, this);
-		createFixture(fd);
-		
+		number -= getBlock(x, y).getTextureLayers(x, y, this);
+
+		blocks[x + width * y] = id;
+
+		number += block.getTextureLayers(x, y, this);
+
+		FixtureDef fd = block.getPhysics(x, y, this);
+
+		if(fd != null)
+			createFixture(fd);
+
 		getBlock(id(x, y + 1)).blockChange(Direction.DOWN, x, y + 1, this);
 		getBlock(id(x, y - 1)).blockChange(Direction.UP, x, y - 1, this);
 		getBlock(id(x + 1, y)).blockChange(Direction.LEFT, x + 1, y, this);
 		getBlock(id(x - 1, y)).blockChange(Direction.RIGHT, x - 1, y, this);
 
-		if(fixtures[fi(x, y + 1)] == null)
-			createSensor(x, y + 1);
-		
-		if(fixtures[fi(x, y - 1)] == null)
-			createSensor(x, y - 1);
-		
-		if(fixtures[fi(x + 1, y)] == null)
-			createSensor(x + 1, y);
-		
-		if(fixtures[fi(x - 1, y)] == null)
-			createSensor(x - 1, y);
-		
+		if(fd != null) {
+			if(fixtures[fi(x, y + 1)] == null && block.canBePlaced(Direction.UP, 0, x, y, this));
+				createSensor(x, y + 1);
+
+			if(fixtures[fi(x, y - 1)] == null && block.canBePlaced(Direction.DOWN, 0, x, y, this))
+				createSensor(x, y - 1);
+
+			if(fixtures[fi(x + 1, y)] == null && block.canBePlaced(Direction.RIGHT, 0, x, y, this))
+				createSensor(x + 1, y);
+
+			if(fixtures[fi(x - 1, y)] == null && block.canBePlaced(Direction.LEFT, 0, x, y, this))
+				createSensor(x - 1, y);
+		}
+
 		renderer.resizeBuffer();
+	}
+
+	/** warning this does change block for a small period of time */
+	public boolean checkCanBePlaced(int x, int y, int id) {
+		int old = id(x, y);
+		Block test = getBlock(x, y);
+
+		if(getBlock(x, y + 1).canBePlaced(Direction.DOWN, id, x, y + 1, this) && test.canBePlaced(Direction.UP, id(x, y + 1), x, y, this)) {
+			blocks[i(x, y)] = old;
+			return true;
+		}
+
+		if(getBlock(x, y - 1).canBePlaced(Direction.UP, id, x, y - 1, this) && test.canBePlaced(Direction.DOWN, id(x, y - 1), x, y, this)) {
+			blocks[i(x, y)] = old;
+			return true;
+		}
+
+		if(getBlock(x + 1, y).canBePlaced(Direction.LEFT, id, x + 1, y, this) && test.canBePlaced(Direction.RIGHT, id(x + 1, y), x, y, this)) {
+			blocks[i(x, y)] = old;
+			return true;
+		}
+
+		if(getBlock(x - 1, y).canBePlaced(Direction.RIGHT, id, x - 1, y, this) && test.canBePlaced(Direction.LEFT, id(x - 1, y), x, y, this)) {
+			blocks[i(x, y)] = old;
+			return true;
+		}
+
+		return false;
 	}
 
 	private void createSensor(int x, int y) {
@@ -233,7 +275,7 @@ public class BlockGroup extends Body {
 
 		createFixture(fd);
 	}
-	
+
 	public void expandUp(int amount) {
 		heat = Arrays.copyOf(heat, amount * width + heat.length);
 		blocks = Arrays.copyOf(blocks, blocks.length + amount * width);
@@ -255,7 +297,7 @@ public class BlockGroup extends Body {
 
 		Fixture next = super.getFixtureList();
 		yoffset--;
-		
+
 		if(selected != null && selected.parent == this)
 			selected.y++;
 
@@ -270,23 +312,23 @@ public class BlockGroup extends Body {
 		double[] newHeat = new double[amount * height + heat.length];
 		int[] newBlocks = new int[amount * height + heat.length];
 		Fixture[] newFixtures = new Fixture[amount * (height + 2) + fixtures.length];
-		
+
 		for(int row = 0; row < height; row++) {
 			System.arraycopy(heat, row * width, newHeat, row * (width + amount) + amount, width);
 			System.arraycopy(blocks, row * width, newBlocks, row * (width + amount) + amount, width);
 			System.arraycopy(fixtures, row * (width + 2), newFixtures, row * (width + amount + 2) + amount, width + 2);
 		}
-		
+
 		System.arraycopy(fixtures, height * (width + 2), newFixtures, height * (width + amount + 2) + amount, width + 2);
 		System.arraycopy(fixtures, (height + 1) * (width + 2), newFixtures, (height + 1) * (width + amount + 2) + amount, width + 2);
-		
+
 		fixtures = newFixtures;
 		blocks = newBlocks;
 		heat = newHeat;
-		
+
 		width += amount;
 		xoffset--;
-		
+
 		if(selected != null && selected.parent == this)
 			selected.x++;
 
@@ -303,7 +345,7 @@ public class BlockGroup extends Body {
 		double[] newHeat = new double[amount * height + heat.length];
 		int[] newBlocks = new int[amount * height + heat.length];
 		Fixture[] newFixtures = new Fixture[amount * (height + 2) + fixtures.length];
-		
+
 		for(int row = 0; row < height; row++) {
 			System.arraycopy(heat, row * width, newHeat, row * (width + amount), width);
 			System.arraycopy(blocks, row * width, newBlocks, row * (width + amount), width);
@@ -312,11 +354,11 @@ public class BlockGroup extends Body {
 
 		System.arraycopy(fixtures, height * (width + 2), newFixtures, height * (width + 2 + amount), width + 2);
 		System.arraycopy(fixtures, (height + 1) * (width + 2), newFixtures, (height + 1) * (width + 2 + amount), width + 2);
-		
+
 		blocks = newBlocks;
 		heat = newHeat;
 		fixtures = newFixtures;
-		
+
 		width += amount;
 	}
 

@@ -7,7 +7,7 @@ import block.BlockFixtureData;
 import block.BlockGroup;
 
 public class CreativeBuildMode extends ClickMode {
-	int id = 2;//Block.toDataBlockID(1);
+	int id = Block.toDataBlockID(1);
 	
 	CreativeBuildMode() {
 		super("clickmode.creativebuild", 16, 16);
@@ -19,7 +19,7 @@ public class CreativeBuildMode extends ClickMode {
 			BlockFixtureData bfd = (BlockFixtureData) c;
 			point = Transform.mul(bfd.owner.getTransform().invert(), point);
 			point.mulLocal(1 / bfd.owner.scale);
-			point.addLocal(-bfd.x, -bfd.y);
+			point.addLocal(- bfd.owner.xoffset - bfd.x, - bfd.owner.yoffset - bfd.y);
 
 			bfd.owner.setBlock(bfd.x, bfd.y, Block.getBlock(id).getID(point, bfd.x, bfd.y, bfd.owner));
 		}
