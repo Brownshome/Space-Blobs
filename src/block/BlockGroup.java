@@ -179,10 +179,109 @@ public class BlockGroup extends Body {
 		return getBlock(i).getHeat(x(i), y(i), this);
 	}
 
+	/** sets a block without expanding, checking legality or updating */
+	public void setBlockRaw(int x, int y, int id) {
+		number -= getBlock(x, y).getTextureLayers(x, y, this);
+
+		blocks[x + width * y] = id;
+
+		number += Block.getBlock(id).getTextureLayers(x, y, this);
+
+		FixtureDef fd = Block.getBlock(id).getPhysics(x, y, this);
+
+		if(fd != null) {
+			createFixture(fd);
+		} else {
+			if(hasBlockAdjacent(x, y)) {
+				createSensor(x, y);
+			}
+		}
+	}
+
+	public void removeBlock(int x, int y) {
+		if(id(x, y) == 0)
+			return;
+		
+		setBlockRaw(x, y, 0);
+		signalBlockChange(x, y);
+		updateSensors(x, y, 0);
+		
+		renderer.resizeBuffer();
+		
+		//TODO check for all blocks removed
+	}
+	
+	/** Sets the block without checking if the placement is legal */
+	public void setBlockUnchecked(int x, int y, int id) {
+		int[] xy = expandTo(x, y);
+		x = xy[0];
+		y = xy[1];
+		
+		setBlockRaw(x, y, id);
+		signalBlockChange(x, y);
+		updateSensors(x, y, id);
+		renderer.resizeBuffer();
+	}
+	
 	/** This method checks for connectivity, to build bulk structures use the bulk method, to remove use removeBlock() */
 	public void setBlock(int x, int y, int id) {
+		int[] xy = expandTo(x, y);
+		x = xy[0];
+		y = xy[1];
+
+		if(!checkCanBePlaced(x, y, id))
+			return;
+
+		setBlockRaw(x, y, id);
+		signalBlockChange(x, y);
+		updateSensors(x, y, id);
+		renderer.resizeBuffer();
+
+		//TODO break object into multiple parts.
+	}
+
+	public void signalBlockChange(int x, int y) {
+		getBlock(id(x, y + 1)).blockChange(Direction.DOWN, x, y + 1, this);
+		getBlock(id(x, y - 1)).blockChange(Direction.UP, x, y - 1, this);
+		getBlock(id(x + 1, y)).blockChange(Direction.LEFT, x + 1, y, this);
+		getBlock(id(x - 1, y)).blockChange(Direction.RIGHT, x - 1, y, this);
+	}
+	
+	public void updateSensors(int x, int y, int id) {
 		Block block = Block.getBlock(id);
 		
+		if(block.canBePlaced(Direction.UP, 0, x, y, this)) {
+			if(fixtures[fi(x, y + 1)] == null)
+				createSensor(x, y + 1);
+		} else
+			if(fixtures[fi(x, y + 1)] != null && !hasBlockAdjacent(x, y + 1))
+				removeSensor(x, y + 1);
+
+		if(block.canBePlaced(Direction.DOWN, 0, x, y, this)) {
+			if(fixtures[fi(x, y - 1)] == null)
+				createSensor(x, y - 1);
+		} else
+			if(fixtures[fi(x, y - 1)] != null && !hasBlockAdjacent(x, y - 1))
+				removeSensor(x, y - 1);
+
+		if(block.canBePlaced(Direction.RIGHT, 0, x, y, this)) {
+			if(fixtures[fi(x + 1, y)] == null)
+				createSensor(x + 1, y);
+		} else
+			if(fixtures[fi(x + 1, y)] != null && !hasBlockAdjacent(x + 1, y))
+				removeSensor(x + 1, y);
+
+		if(block.canBePlaced(Direction.LEFT, 0, x, y, this)) {
+			if(fixtures[fi(x - 1, y)] == null)
+				createSensor(x - 1, y);
+		} else
+			if(fixtures[fi(x - 1, y)] != null && !hasBlockAdjacent(x - 1, y))
+				removeSensor(x - 1, y);
+	}
+	
+	private final int[] POOL = new int[2];
+
+	public int[] expandTo(int x, int y) {
 		if(x < 0) {
 			expandLeft(-x);
 			x = 0;
@@ -203,43 +302,18 @@ public class BlockGroup extends Body {
 			y = height - 1;
 		}
 
-		if(!checkCanBePlaced(x, y, id))
-			return;
+		POOL[0] = x;
+		POOL[1] = y;
 
-		number -= getBlock(x, y).getTextureLayers(x, y, this);
+		return POOL;
+	}
 
-		blocks[x + width * y] = id;
-
-		number += block.getTextureLayers(x, y, this);
-
-		FixtureDef fd = block.getPhysics(x, y, this);
-
-		if(fd != null)
-			createFixture(fd);
-
-		getBlock(id(x, y + 1)).blockChange(Direction.DOWN, x, y + 1, this);
-		getBlock(id(x, y - 1)).blockChange(Direction.UP, x, y - 1, this);
-		getBlock(id(x + 1, y)).blockChange(Direction.LEFT, x + 1, y, this);
-		getBlock(id(x - 1, y)).blockChange(Direction.RIGHT, x - 1, y, this);
-
-		if(fd != null) {
-			if(fixtures[fi(x, y + 1)] == null && block.canBePlaced(Direction.UP, 0, x, y, this))
-				createSensor(x, y + 1);
-
-			if(fixtures[fi(x, y - 1)] == null && block.canBePlaced(Direction.DOWN, 0, x, y, this))
-				createSensor(x, y - 1);
-
-			if(fixtures[fi(x + 1, y)] == null && block.canBePlaced(Direction.RIGHT, 0, x, y, this))
-				createSensor(x + 1, y);
-
-			if(fixtures[fi(x - 1, y)] == null && block.canBePlaced(Direction.LEFT, 0, x, y, this))
-				createSensor(x - 1, y);
-		}
-
-		renderer.resizeBuffer();
-		
-		//TODO break object into multiple parts.
-		//TODO remove sensors that no longer are possible
+	/** checks if there is a supporting block next to (x, y) */
+	public boolean hasBlockAdjacent(int x, int y) {
+		return 	getBlock(x, y + 1).canBePlaced(Direction.DOWN, 0, x, y + 1, this) || 
+				getBlock(x, y - 1).canBePlaced(Direction.UP, 0, x, y - 1, this) || 
+				getBlock(x + 1, y).canBePlaced(Direction.LEFT, 0, x + 1, y, this) || 
+				getBlock(x - 1, y).canBePlaced(Direction.RIGHT, 0, x - 1, y, this);
 	}
 
 	/** warning this does change block for a small period of time */
@@ -280,6 +354,12 @@ public class BlockGroup extends Body {
 		fd.userData = new BlockFixtureData(x, y, this);
 
 		createFixture(fd);
+	}
+
+	private void removeSensor(int x, int y) {
+		int index = fi(x, y);
+		super.destroyFixture(fixtures[index]);
+		fixtures[index] = null;
 	}
 
 	public void expandUp(int amount) {

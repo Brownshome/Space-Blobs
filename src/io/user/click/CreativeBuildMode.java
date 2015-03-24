@@ -29,7 +29,7 @@ public class CreativeBuildMode extends ClickMode {
 	public void secondary(Clickable c, Vec2 point) {
 		if(c instanceof BlockFixtureData) {
 			BlockFixtureData bfd = (BlockFixtureData) c;
-			bfd.owner.setBlock(bfd.x, bfd.y, 0);
+			bfd.owner.removeBlock(bfd.x, bfd.y);
 		}
 	}
 
