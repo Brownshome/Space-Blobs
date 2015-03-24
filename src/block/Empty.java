@@ -9,7 +9,7 @@ public class Empty extends Block {
 	public int getID(int x, int y, BlockGroup parent) { return 0; }
 	
 	@Override
-	public FixtureDef getPhysics(int x, int y, BlockGroup parent) { return null; }
+	public FixtureDef[] getPhysics(int x, int y, BlockGroup parent) { return null; }
 
 	@Override
 	public int[][] getTextures(int x, int y, BlockGroup parent) { return new int[0][]; }

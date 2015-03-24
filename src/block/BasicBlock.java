@@ -36,7 +36,7 @@ public class BasicBlock extends Block {
 	}
 
 	@Override
-	public FixtureDef getPhysics(int x, int y, BlockGroup parent) {
+	public FixtureDef[] getPhysics(int x, int y, BlockGroup parent) {
 		FixtureDef fd = new FixtureDef();
 		fd.filter.categoryBits = Constants.SHIP_BIT | Constants.SHIP_SELECTED_BIT;
 		fd.friction = 0.3;
@@ -44,6 +44,6 @@ public class BasicBlock extends Block {
 		fd.shape = new PolygonShape().setAsBox(parent.scale * 0.5, parent.scale * 0.5, new Vec2((x + parent.xoffset) * parent.scale, (y + parent.yoffset) * parent.scale), 0.0);
 		fd.density = 10.0;
 		fd.userData = new BlockFixtureData(x, y, parent);
-		return fd;
+		return new FixtureDef[] {fd};
 	}
 }

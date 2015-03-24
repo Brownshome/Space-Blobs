@@ -26,7 +26,7 @@ public class BlockGroup extends Body {
 	//arrays of data
 	int[] blocks;
 	double[] heat;
-	Fixture[] fixtures; //the fixtures array is 2 larger on each axis
+	Fixture[][] fixtures; //the fixtures array is 2 larger on each axis, the array is 2D to accomodate complex block fixtures
 
 	//fixture creation offset
 	public int xoffset = 0;
@@ -44,14 +44,14 @@ public class BlockGroup extends Body {
 		Game.getWorld().createBody(this);
 
 		blocks = new int[] {id};
-		fixtures = new Fixture[9];
+		fixtures = new Fixture[9][];
 		width = 1;
 		height = 1;
 		this.scale = scale;
 		Block initial = Block.getBlock(id);
 		number = initial.getTextureLayers(0, 0, this) + 1; //the one is for the selection box, a more sensible system is needed
 
-		FixtureDef fd = initial.getPhysics(0, 0, this);
+		FixtureDef[] fd = initial.getPhysics(0, 0, this);
 		if(fd != null)
 			createFixture(fd);
 	}
@@ -59,15 +59,20 @@ public class BlockGroup extends Body {
 	/** The override is so that the fixtures are kept in a data
 	 * structure of my own as well as the body linked list
 	 * this also destroys the old fixture at the location */
-	@Override
-	public Fixture createFixture(FixtureDef fd) {
-		BlockFixtureData bfd = (BlockFixtureData) fd.userData;
+	public Fixture[] createFixture(FixtureDef[] fd) {
+		BlockFixtureData bfd = (BlockFixtureData) fd[0].userData;
 		int index = fi(bfd.x, bfd.y);
 
 		if(fixtures[index] != null)
-			super.destroyFixture(fixtures[index]);
+			for(Fixture f : fixtures[index])
+				super.destroyFixture(f);
 
-		return fixtures[index] = super.createFixture(fd);
+		fixtures[index] = new Fixture[fd.length];
+		for(int i = 0; i < fd.length; i++) {
+			fixtures[index][i] = super.createFixture(fd[i]);
+		}
+
+		return fixtures[index];
 	}
 
 	/** Use when creating BlockGroups from disk or generating existing structures */
@@ -81,7 +86,7 @@ public class BlockGroup extends Body {
 		innit(def);
 		Game.getWorld().createBody(this);
 
-		fixtures = new Fixture[(width + 2) * (height + 2)];
+		fixtures = new Fixture[(width + 2) * (height + 2)][];
 
 		blocks = ids;
 		heat = new double[ids.length];
@@ -89,7 +94,7 @@ public class BlockGroup extends Body {
 		this.height = height;
 		this.scale = scale;
 		number = 1;
-		FixtureDef fd = null;
+		FixtureDef[] fd = null;
 
 		//(0, 0) is at 1, 1
 		int[] sensors = new int[(width + 2) * (height + 2)];
@@ -187,7 +192,7 @@ public class BlockGroup extends Body {
 
 		number += Block.getBlock(id).getTextureLayers(x, y, this);
 
-		FixtureDef fd = Block.getBlock(id).getPhysics(x, y, this);
+		FixtureDef[] fd = Block.getBlock(id).getPhysics(x, y, this);
 
 		if(fd != null) {
 			createFixture(fd);
@@ -201,28 +206,28 @@ public class BlockGroup extends Body {
 	public void removeBlock(int x, int y) {
 		if(id(x, y) == 0)
 			return;
-		
+
 		setBlockRaw(x, y, 0);
 		signalBlockChange(x, y);
 		updateSensors(x, y, 0);
-		
+
 		renderer.resizeBuffer();
-		
+
 		//TODO check for all blocks removed
 	}
-	
+
 	/** Sets the block without checking if the placement is legal */
 	public void setBlockUnchecked(int x, int y, int id) {
 		int[] xy = expandTo(x, y);
 		x = xy[0];
 		y = xy[1];
-		
+
 		setBlockRaw(x, y, id);
 		signalBlockChange(x, y);
 		updateSensors(x, y, id);
 		renderer.resizeBuffer();
 	}
-	
+
 	/** This method checks for connectivity, to build bulk structures use the bulk method, to remove use removeBlock() */
 	public void setBlock(int x, int y, int id) {
 		int[] xy = expandTo(x, y);
@@ -246,10 +251,10 @@ public class BlockGroup extends Body {
 		getBlock(id(x + 1, y)).blockChange(Direction.LEFT, x + 1, y, this);
 		getBlock(id(x - 1, y)).blockChange(Direction.RIGHT, x - 1, y, this);
 	}
-	
+
 	public void updateSensors(int x, int y, int id) {
 		Block block = Block.getBlock(id);
-		
+
 		if(block.canBePlaced(Direction.UP, 0, x, y, this)) {
 			if(fixtures[fi(x, y + 1)] == null)
 				createSensor(x, y + 1);
@@ -278,7 +283,7 @@ public class BlockGroup extends Body {
 			if(fixtures[fi(x - 1, y)] != null && !hasBlockAdjacent(x - 1, y))
 				removeSensor(x - 1, y);
 	}
-	
+
 	private final int[] POOL = new int[2];
 
 	public int[] expandTo(int x, int y) {
@@ -353,12 +358,12 @@ public class BlockGroup extends Body {
 		fd.filter.categoryBits = Constants.SHIP_SELECTED_BIT;
 		fd.userData = new BlockFixtureData(x, y, this);
 
-		createFixture(fd);
+		createFixture(new FixtureDef[] {fd});
 	}
 
 	private void removeSensor(int x, int y) {
 		int index = fi(x, y);
-		super.destroyFixture(fixtures[index]);
+		super.destroyFixture(fixtures[index][0]);
 		fixtures[index] = null;
 	}
 
@@ -374,7 +379,7 @@ public class BlockGroup extends Body {
 		System.arraycopy(heat, 0, newHeat, amount * width, heat.length);
 		int[] newBlocks = new int[amount * width + blocks.length];
 		System.arraycopy(blocks, 0, newBlocks, amount * width, blocks.length);
-		Fixture[] newFixtures = new Fixture[amount * (width + 2) + fixtures.length];
+		Fixture[][] newFixtures = new Fixture[amount * (width + 2) + fixtures.length][];
 		System.arraycopy(fixtures, 0, newFixtures, amount * (width + 2), fixtures.length);
 		height += amount;
 		heat = newHeat;
@@ -397,7 +402,7 @@ public class BlockGroup extends Body {
 	public void expandLeft(int amount) {
 		double[] newHeat = new double[amount * height + heat.length];
 		int[] newBlocks = new int[amount * height + heat.length];
-		Fixture[] newFixtures = new Fixture[amount * (height + 2) + fixtures.length];
+		Fixture[][] newFixtures = new Fixture[amount * (height + 2) + fixtures.length][];
 
 		for(int row = 0; row < height; row++) {
 			System.arraycopy(heat, row * width, newHeat, row * (width + amount) + amount, width);
@@ -430,7 +435,7 @@ public class BlockGroup extends Body {
 	public void expandRight(int amount) {
 		double[] newHeat = new double[amount * height + heat.length];
 		int[] newBlocks = new int[amount * height + heat.length];
-		Fixture[] newFixtures = new Fixture[amount * (height + 2) + fixtures.length];
+		Fixture[][] newFixtures = new Fixture[amount * (height + 2) + fixtures.length][];
 
 		for(int row = 0; row < height; row++) {
 			System.arraycopy(heat, row * width, newHeat, row * (width + amount), width);

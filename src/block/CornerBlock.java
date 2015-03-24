@@ -30,11 +30,11 @@ public class CornerBlock extends BasicBlock {
 	}
 
 	@Override
-	public FixtureDef getPhysics(int x, int y, BlockGroup parent) {
-		FixtureDef fd = super.getPhysics(x, y, parent);
+	public FixtureDef[] getPhysics(int x, int y, BlockGroup parent) {
+		FixtureDef[] fd = super.getPhysics(x, y, parent);
 		PolygonShape ps = new PolygonShape();
 		ps.set(getShape(parent.scale, x, y, toData(parent.id(x, y)), parent.xoffset, parent.yoffset), 3);
-		fd.shape = ps;
+		fd[0].shape = ps;
 		return fd;
 	}
 
