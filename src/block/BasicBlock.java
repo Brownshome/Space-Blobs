@@ -9,6 +9,12 @@ public class BasicBlock extends Block {
 	int id;
 	int[][] texture;
 	
+	/** Use this one for subclasses */
+	public BasicBlock(int id, int[][] texture) {
+		this.texture = texture;
+		this.id = id;
+	}
+	
 	public BasicBlock(int id, int texture) {
 		this.id = id;
 		this.texture = new int[][] {{texture, 0, 0, 0}};
@@ -46,4 +52,11 @@ public class BasicBlock extends Block {
 		fd.userData = new BlockFixtureData(x, y, parent);
 		return new FixtureDef[] {fd};
 	}
+
+	@Override
+	public Object[] tick(Object[] data, int pass, int x, int y) {
+		return data;
+	}
+
+	//TODO worry about serial tick for non-threadsafe methods
 }

@@ -67,6 +67,11 @@ public abstract class Block {
 	/** Returns if 'block' can be placed onto this side, don't worry about the shape of the other block, the other block's method is used for that
 	 * if id = 0 return if the side is ever placable on */
 	public boolean canBePlaced(Direction dir, int block, int x, int y, BlockGroup parent) { return true; }
+	/** returns the numer of passes required by the block */
+	public int passes(int x, int y, BlockGroup parent) { return 1; }
+	/** All blocks tick will be called for pass 1 then 2 ect. Data holds the data returned from the previous
+	 * method. Return null to terminate passes */
+	public Object[] tick(Object[] data, int pass, int x, int y) { return null; };
 	/** Returns the heat transfer rate in unit of difference per units per second  */
 	public abstract double getHeatResistivity(int x, int y, BlockGroup parent);
 	/** How many units of heat it takes to change one unit of tempurature in the block */

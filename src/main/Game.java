@@ -78,7 +78,7 @@ public class Game {
 			KeyIO.tick();
 			GUI.INSTANCE.tick();
 			
-			bg1.tickHeat();
+			bg1.tick();
 			bgr1.render();
 			
 			TextRenderer.render();

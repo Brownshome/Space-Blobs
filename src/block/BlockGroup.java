@@ -1,10 +1,11 @@
 package block;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import main.Game;
 import physics.collision.shapes.PolygonShape;
-import physics.common.Settings;
 import physics.common.Vec2;
 import physics.dynamics.Body;
 import physics.dynamics.BodyDef;
@@ -127,26 +128,29 @@ public class BlockGroup extends Body {
 		}
 	}
 
-	public void tickHeat() {
-		//copy array
-		double[] next = heat.clone();
+	public void tick() {
+		//data is in the form {[x, y, id], block, null}
+		int passes = 0;
 
-		//calculate new values from conductance
-		for(int x = 0; x < width; x++)
-			for(int y = 0; y < height; y++) {
-				Block c = getBlock(x, y);
+		Stream<Object[]> stream = Arrays.stream(IntStream.range(0, blocks.length).mapToObj(i -> {
+			Math.max(passes, Block.getBlock(blocks[i]).passes(x(i), y(i), this));
+			return new Object[] {new int[] {x(i), y(i), blocks[i]}, Block.getBlock(blocks[i]), null};
+		}).filter(o -> o != null).toArray(Object[][]::new)).parallel();
 
-				double u = (Settings.DELTA * 2.0) / (resistivity(x, y + 1) + c.getHeatResistivity(x, y, this));
-				double l = (Settings.DELTA * 2.0) / (resistivity(x - 1, y) + c.getHeatResistivity(x, y, this));
-				double r = (Settings.DELTA * 2.0) / (resistivity(x + 1, y) + c.getHeatResistivity(x, y, this));
-				double d = (Settings.DELTA * 2.0) / (resistivity(x, y - 1) + c.getHeatResistivity(x, y, this));
+		for(int pass = 0; pass < passes - 1; pass++) {
+			int p = pass;
+			stream = stream.map(o -> {
+				int[] xyid = (int[]) o[0];
+				return ((Block) o[1]).tick(o, p, xyid[0], xyid[1]);
+			}).filter(o -> o != null);
+		}
 
-				double h = heat[x + y * width];
+		int p = passes - 1;
 
-				next[x + y * width] += ((heat(x, y + 1) - h) * u + (heat(x - 1, y) - h) * l + (heat(x + 1, y) - h) * r + (heat(x, y - 1) - h) * d) / c.getHeatCapacity(x, y, this);
-			}
-
-		heat = next;
+		stream.forEach(o -> {
+			int[] xyid = (int[]) o[0];
+			((Block) o[1]).tick(o, p, xyid[0], xyid[1]);
+		});
 	}
 
 	public int id(int x, int y) {
