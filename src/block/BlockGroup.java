@@ -263,28 +263,28 @@ public class BlockGroup extends Body {
 			if(fixtures[fi(x, y + 1)] == null)
 				createSensor(x, y + 1);
 		} else
-			if(fixtures[fi(x, y + 1)] != null && !hasBlockAdjacent(x, y + 1))
+			if(fixtures[fi(x, y + 1)] != null && fixtures[fi(x, y + 1)][0].m_isSensor && !hasBlockAdjacent(x, y + 1))
 				removeSensor(x, y + 1);
 
 		if(block.canBePlaced(Direction.DOWN, 0, x, y, this)) {
 			if(fixtures[fi(x, y - 1)] == null)
 				createSensor(x, y - 1);
 		} else
-			if(fixtures[fi(x, y - 1)] != null && !hasBlockAdjacent(x, y - 1))
+			if(fixtures[fi(x, y - 1)] != null && fixtures[fi(x, y - 1)][0].m_isSensor && !hasBlockAdjacent(x, y - 1))
 				removeSensor(x, y - 1);
 
 		if(block.canBePlaced(Direction.RIGHT, 0, x, y, this)) {
 			if(fixtures[fi(x + 1, y)] == null)
 				createSensor(x + 1, y);
 		} else
-			if(fixtures[fi(x + 1, y)] != null && !hasBlockAdjacent(x + 1, y))
+			if(fixtures[fi(x + 1, y)] != null && fixtures[fi(x + 1, y)][0].m_isSensor && !hasBlockAdjacent(x + 1, y))
 				removeSensor(x + 1, y);
 
 		if(block.canBePlaced(Direction.LEFT, 0, x, y, this)) {
 			if(fixtures[fi(x - 1, y)] == null)
 				createSensor(x - 1, y);
 		} else
-			if(fixtures[fi(x - 1, y)] != null && !hasBlockAdjacent(x - 1, y))
+			if(fixtures[fi(x - 1, y)] != null && fixtures[fi(x - 1, y)][0].m_isSensor && !hasBlockAdjacent(x - 1, y))
 				removeSensor(x - 1, y);
 	}
 
