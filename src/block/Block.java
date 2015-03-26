@@ -73,7 +73,7 @@ public abstract class Block {
 	/** Returns the heat transfer rate in units per unit of difference per second (-100 WATER FREEZE, 0 NORMAL, 100 WATER BOIL, 1000 METAL MELT) */
 	public abstract double getHeatConductance(int x, int y, BlockGroup parent);
 	/** How many units of heat it takes to change one unit of tempurature in the block */
-	public abstract double getHeatCapacity(int x, int y, BlockGroup parent);
+	public abstract double getHeatVariability(int x, int y, BlockGroup parent);
 	/** Gets the heat, the default method is to read the data from the blockgroup */
 	public abstract double getHeat(int x, int y, BlockGroup parent);
 	/** Called whenever a neighboring block changes */

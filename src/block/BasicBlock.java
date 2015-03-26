@@ -10,11 +10,8 @@ public class BasicBlock extends Block {
 	int id;
 	int[][] texture;
 	
-	/** Use this one for subclasses */
-	public BasicBlock(int id, int[][] texture) {
-		this.texture = texture;
-		this.id = id;
-	}
+	/** make sure to override getID and getTextures */
+	public BasicBlock() {}
 	
 	public BasicBlock(int id, int texture) {
 		this.id = id;
@@ -28,7 +25,7 @@ public class BasicBlock extends Block {
 	public int[][] getTextures(int x, int y, BlockGroup parent) { return texture; }
 
 	@Override
-	public double getHeatCapacity(int x, int y, BlockGroup parent) { return 1.0; }
+	public double getHeatVariability(int x, int y, BlockGroup parent) { return 1.0; }
 
 	@Override
 	public double getHeat(int x, int y, BlockGroup parent) { return parent.rawHeat(x, y); }
@@ -39,7 +36,7 @@ public class BasicBlock extends Block {
 
 	@Override
 	public double getHeatConductance(int x, int y, BlockGroup parent) {
-		return 1.0;
+		return 10.0;
 	}
 
 	@Override
@@ -55,6 +52,7 @@ public class BasicBlock extends Block {
 	}
 
 	/** This tick is for heat flows, 1st pass calculates new heat, second pass sets it */
+	//TODO fracture mechanics, heat radiation
 	@Override
 	public Object[] tick(Object[] data, int pass, int x, int y, BlockGroup parent) {
 		switch(pass) {
@@ -68,7 +66,7 @@ public class BasicBlock extends Block {
 		return null;
 	}
 
-	private double getNewHeat(int x, int y, BlockGroup parent) {
+	public double getNewHeat(int x, int y, BlockGroup parent) {
 		double h = parent.heat(x, y);
 		double hU = parent.heat(x, y + 1);
 		double hR = parent.heat(x + 1, y);
@@ -92,6 +90,6 @@ public class BasicBlock extends Block {
 		//TODO
 		
 		//3 move heat
-		return h + (rU + rL + rD + rR) * getHeatCapacity(x, y, parent);
+		return h + (rU + rL + rD + rR) * getHeatVariability(x, y, parent);
 	}
 }

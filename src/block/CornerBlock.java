@@ -5,7 +5,7 @@ import physics.common.Vec2;
 import physics.dynamics.FixtureDef;
 import physics.collision.shapes.PolygonShape;
 
-public class CornerBlock extends BasicBlock {
+public class CornerBlock extends DataBlock {
 	static Vec2[] getShape(double scale, int x, int y, int rot, int xoffset, int yoffset) {
 		Vec2 o = new Vec2((x + xoffset) * scale, (y + yoffset) * scale);
 		scale *= 0.5;
@@ -26,7 +26,7 @@ public class CornerBlock extends BasicBlock {
 	}
 
 	public CornerBlock() {
-		super(1, BlockGroupRenderer.HULL_CORNER);
+		texture = new int[][] {{BlockGroupRenderer.HULL_CORNER, 0, 0, 0}};
 	}
 
 	@Override
@@ -38,10 +38,6 @@ public class CornerBlock extends BasicBlock {
 		return fd;
 	}
 
-	public int getData(int x, int y, BlockGroup parent) {
-		return Block.toData(parent.id(x, y));
-	}
-	
 	@Override
 	public int[][] getTextures(int x, int y, BlockGroup parent) {
 		texture[0][3] = getData(x, y, parent);
@@ -49,9 +45,8 @@ public class CornerBlock extends BasicBlock {
 	}
 
 	@Override
-	public int getID(Vec2 point, int x, int y, BlockGroup parent) {
-		int rot = point.x < 0 ? (point.y < 0 ? 0 : 1) : (point.y > 0 ? 2 : 3);
-		return Block.toDataBlockID(1, rot);
+	public int getDefaultData(Vec2 point, int x, int y, BlockGroup parent) {
+		return point.x < 0 ? (point.y < 0 ? 0 : 1) : (point.y > 0 ? 2 : 3);
 	}
 	
 	@Override
