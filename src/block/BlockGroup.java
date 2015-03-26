@@ -130,27 +130,28 @@ public class BlockGroup extends Body {
 
 	public void tick() {
 		//data is in the form {[x, y, id], block, null}
-		int passes = 0;
+		Object[][] data =
+			IntStream
+			.range(0, blocks.length)
+			.mapToObj(i -> new Object[] {new int[] {x(i), y(i), blocks[i]}, Block.getBlock(blocks[i]), null})
+			.filter(o -> o != null)
+			.toArray(Object[][]::new); 
 
-		Stream<Object[]> stream = Arrays.stream(IntStream.range(0, blocks.length).mapToObj(i -> {
-			Math.max(passes, Block.getBlock(blocks[i]).passes(x(i), y(i), this));
-			return new Object[] {new int[] {x(i), y(i), blocks[i]}, Block.getBlock(blocks[i]), null};
-		}).filter(o -> o != null).toArray(Object[][]::new)).parallel();
+		int length = data.length;
+		int pass = 0;
 
-		for(int pass = 0; pass < passes - 1; pass++) {
-			int p = pass;
-			stream = stream.map(o -> {
-				int[] xyid = (int[]) o[0];
-				return ((Block) o[1]).tick(o, p, xyid[0], xyid[1]);
-			}).filter(o -> o != null);
+		while(length != 0) {
+			length = 0;
+			for(int i = 0; i < data.length; i++) {
+				if(data[i] == null)
+					break;
+				
+				int[] xyid = (int[]) data[i][0];
+				data[length++] = ((Block) data[i][1]).tick(data[i], pass, xyid[0], xyid[1]);
+			}
+			
+			pass++;
 		}
-
-		int p = passes - 1;
-
-		stream.forEach(o -> {
-			int[] xyid = (int[]) o[0];
-			((Block) o[1]).tick(o, p, xyid[0], xyid[1]);
-		});
 	}
 
 	public int id(int x, int y) {
@@ -320,9 +321,9 @@ public class BlockGroup extends Body {
 	/** checks if there is a supporting block next to (x, y) */
 	public boolean hasBlockAdjacent(int x, int y) {
 		return 	getBlock(x, y + 1).canBePlaced(Direction.DOWN, 0, x, y + 1, this) || 
-				getBlock(x, y - 1).canBePlaced(Direction.UP, 0, x, y - 1, this) || 
-				getBlock(x + 1, y).canBePlaced(Direction.LEFT, 0, x + 1, y, this) || 
-				getBlock(x - 1, y).canBePlaced(Direction.RIGHT, 0, x - 1, y, this);
+			getBlock(x, y - 1).canBePlaced(Direction.UP, 0, x, y - 1, this) || 
+			getBlock(x + 1, y).canBePlaced(Direction.LEFT, 0, x + 1, y, this) || 
+			getBlock(x - 1, y).canBePlaced(Direction.RIGHT, 0, x - 1, y, this);
 	}
 
 	/** warning this does change block for a small period of time */
