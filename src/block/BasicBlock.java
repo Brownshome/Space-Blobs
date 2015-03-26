@@ -1,6 +1,7 @@
 package block;
 
 import physics.collision.shapes.PolygonShape;
+import physics.common.Settings;
 import physics.common.Vec2;
 import physics.dynamics.FixtureDef;
 import physics.link.Constants;
@@ -37,8 +38,8 @@ public class BasicBlock extends Block {
 	}
 
 	@Override
-	public double getHeatResistivity(int x, int y, BlockGroup parent) {
-		return 0.8;
+	public double getHeatConductance(int x, int y, BlockGroup parent) {
+		return 1.0;
 	}
 
 	@Override
@@ -53,10 +54,44 @@ public class BasicBlock extends Block {
 		return new FixtureDef[] {fd};
 	}
 
+	/** This tick is for heat flows, 1st pass calculates new heat, second pass sets it */
 	@Override
-	public Object[] tick(Object[] data, int pass, int x, int y) {
-		return data;
+	public Object[] tick(Object[] data, int pass, int x, int y, BlockGroup parent) {
+		switch(pass) {
+			case 0:
+				data[2] = getNewHeat(x, y, parent);
+				return data;
+			case 1:
+				parent.heat[parent.i(x, y)] = (double) data[2];
+		}
+		
+		return null;
 	}
 
-	//TODO worry about serial tick for non-threadsafe methods
+	private double getNewHeat(int x, int y, BlockGroup parent) {
+		double h = parent.heat(x, y);
+		double hU = parent.heat(x, y + 1);
+		double hR = parent.heat(x + 1, y);
+		double hL = parent.heat(x - 1, y);
+		double hD = parent.heat(x, y - 1);
+		
+		double c = getHeatConductance(x, y, parent);
+		
+		double cU = parent.getBlock(x, y + 1).getHeatConductance(x, y + 1, parent);
+		double cR = parent.getBlock(x + 1, y).getHeatConductance(x + 1, y, parent);
+		double cL = parent.getBlock(x - 1, y).getHeatConductance(x - 1, y, parent);
+		double cD = parent.getBlock(x, y - 1).getHeatConductance(x, y - 1, parent);
+		
+		//1 find rates
+		double rU = (hU - h) * Math.min(cU, c) * Settings.DELTA;
+		double rL = (hL - h) * Math.min(cL, c) * Settings.DELTA;
+		double rD = (hD - h) * Math.min(cD, c) * Settings.DELTA;
+		double rR = (hR - h) * Math.min(cR, c) * Settings.DELTA;
+		
+		//2 detect overflow
+		//TODO
+		
+		//3 move heat
+		return h + (rU + rL + rD + rR) * getHeatCapacity(x, y, parent);
+	}
 }

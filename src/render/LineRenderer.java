@@ -12,6 +12,7 @@ import org.lwjgl.opengl.GL30;
 import physics.common.Color;
 import physics.common.Vec2;
 
+/** Only used for debug purposes, not optimised at all */
 public class LineRenderer {
 	static final int VAO = Renderer.getVertexArrayID();
 	static final int VBO = Renderer.getBufferID();

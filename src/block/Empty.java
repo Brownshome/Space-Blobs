@@ -15,7 +15,7 @@ public class Empty extends Block {
 	public int[][] getTextures(int x, int y, BlockGroup parent) { return new int[0][]; }
 
 	@Override
-	public double getHeatResistivity(int x, int y, BlockGroup parent) { return Double.POSITIVE_INFINITY; }
+	public double getHeatConductance(int x, int y, BlockGroup parent) { return 0.0; }
 
 	@Override
 	public int getTextureLayers(int x, int y, BlockGroup parent) { return 0; }
@@ -27,5 +27,5 @@ public class Empty extends Block {
 	public double getHeatCapacity(int x, int y, BlockGroup parent) { return Double.POSITIVE_INFINITY; }
 
 	@Override
-	public double getHeat(int x, int y, BlockGroup parent) { return -1000; }
+	public double getHeat(int x, int y, BlockGroup parent) { return 0; }
 }

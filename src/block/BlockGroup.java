@@ -2,7 +2,6 @@ package block;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import main.Game;
 import physics.collision.shapes.PolygonShape;
@@ -25,15 +24,15 @@ public class BlockGroup extends Body {
 	public double scale;
 
 	//arrays of data
-	int[] blocks;
-	double[] heat;
-	Fixture[][] fixtures; //the fixtures array is 2 larger on each axis, the array is 2D to accomodate complex block fixtures
+	public int[] blocks;
+	public double[] heat;
+	public Fixture[][] fixtures; //the fixtures array is 2 larger on each axis, the array is 2D to accomodate complex block fixtures
 
 	//fixture creation offset
 	public int xoffset = 0;
 	public int yoffset = 0;
 
-	int number;
+	public int number;
 
 	/** Use when building one from scratch */
 	public BlockGroup(int id, double angle, Vec2 position, double scale) {
@@ -133,25 +132,25 @@ public class BlockGroup extends Body {
 		Object[][] data =
 			IntStream
 			.range(0, blocks.length)
+			.filter(i -> blocks[i] != 0)
 			.mapToObj(i -> new Object[] {new int[] {x(i), y(i), blocks[i]}, Block.getBlock(blocks[i]), null})
-			.filter(o -> o != null)
 			.toArray(Object[][]::new); 
 
 		int length = data.length;
 		int pass = 0;
 
-		while(length != 0) {
+		do {
 			length = 0;
 			for(int i = 0; i < data.length; i++) {
 				if(data[i] == null)
 					break;
 				
 				int[] xyid = (int[]) data[i][0];
-				data[length++] = ((Block) data[i][1]).tick(data[i], pass, xyid[0], xyid[1]);
+				data[length++] = ((Block) data[i][1]).tick(data[i], pass, xyid[0], xyid[1], this);
 			}
 			
 			pass++;
-		}
+		} while(length != 0);
 	}
 
 	public int id(int x, int y) {
@@ -473,7 +472,7 @@ public class BlockGroup extends Body {
 	}
 
 	public double resistivity(int x, int y) {
-		return getBlock(x, y).getHeatResistivity(x, y, this);
+		return getBlock(x, y).getHeatConductance(x, y, this);
 	}
 
 	int x(int index) {

@@ -69,9 +69,9 @@ public abstract class Block {
 	public boolean canBePlaced(Direction dir, int block, int x, int y, BlockGroup parent) { return true; }
 	/** All blocks tick will be called for pass 0 then 1 ect. Data holds the data returned from the previous
 	 * method. Return null to terminate passes */
-	public Object[] tick(Object[] data, int pass, int x, int y) { return null; }
-	/** Returns the heat transfer rate in unit of difference per units per second  */
-	public abstract double getHeatResistivity(int x, int y, BlockGroup parent);
+	public Object[] tick(Object[] data, int pass, int x, int y, BlockGroup parent) { return null; }
+	/** Returns the heat transfer rate in units per unit of difference per second (-100 WATER FREEZE, 0 NORMAL, 100 WATER BOIL, 1000 METAL MELT) */
+	public abstract double getHeatConductance(int x, int y, BlockGroup parent);
 	/** How many units of heat it takes to change one unit of tempurature in the block */
 	public abstract double getHeatCapacity(int x, int y, BlockGroup parent);
 	/** Gets the heat, the default method is to read the data from the blockgroup */
