@@ -46,7 +46,9 @@ public class Game {
 
 	static void mainLoop() {
 		int[] grid = new int[] {
-			1
+			1, Block.toDataBlockID(0, 255), 1,
+			Block.toDataBlockID(0, 255), Block.toDataBlockID(0, 255), Block.toDataBlockID(0, 255),
+			1, Block.toDataBlockID(0, 255), 1,
 		};
 		
 		BodyDef bd = new BodyDef();
@@ -56,7 +58,7 @@ public class Game {
 		PolygonShape shape = new PolygonShape();
 		shape.setAsBox(1.0, 1.0);
 		
-		BlockGroup bg1 = new BlockGroup(grid, 1, 1, 0.0, new Vec2(), 0.2, new Vec2());
+		BlockGroup bg1 = new BlockGroup(grid, 3, 3, 0.0, new Vec2(), 0.2, new Vec2());
 		
 		world.setDebugDraw(PhysRenderer.INSTANCE);
 		world.setContactListener(ContactResponse.INSTANCE);
@@ -68,6 +70,7 @@ public class Game {
 		TextRenderer.initialize("kristen");
 		
 		while(!Display.isCloseRequested() && !exitFlag) {
+			
 			Display.update();
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
 			

@@ -82,4 +82,6 @@ public abstract class Block {
 	public int getID(Vec2 point, int x, int y, BlockGroup parent) { return getID(x, y, parent); }
 	/** Called when created without an appropriate position */
 	public abstract int getID(int x, int y, BlockGroup parent);
+	/** Called when the block is placed for the first time. NB, not called on disk load */
+	public void onPlace(int x, int y, BlockGroup blockGroup) {};
 }

@@ -246,6 +246,8 @@ public class BlockGroup extends Body {
 		updateSensors(x, y, id);
 		renderer.resizeBuffer();
 
+		Block.getBlock(id).onPlace(x, y, this);
+		
 		//TODO break object into multiple parts.
 	}
 
@@ -483,7 +485,7 @@ public class BlockGroup extends Body {
 		return index / width;
 	}
 
-	int i(int x, int y) {
+	public int i(int x, int y) {
 		return x + width * y;
 	}
 

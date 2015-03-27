@@ -7,8 +7,8 @@ import physics.dynamics.FixtureDef;
 import physics.link.Constants;
 
 public class BasicBlock extends Block {
-	int id;
-	int[][] texture;
+	public int id;
+	public int[][] texture;
 	
 	/** make sure to override getID and getTextures */
 	public BasicBlock() {}
