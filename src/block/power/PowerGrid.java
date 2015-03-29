@@ -24,8 +24,8 @@ public class PowerGrid {
 		double[] func = new double[variables];
 		
 		int n = 0;
-		for(Conduit c : conduits) {
-			c.fillInequality(n, mults, limits);
+		for(int i = 0; i < conduits.size(); i++) {
+			conduits.get(i).fillInequality(n, i, mults, limits);
 			n += 2;
 		}
 		
@@ -39,8 +39,8 @@ public class PowerGrid {
 		
 		double[] solution = pfs.primal();
 		
-		for(Conduit c : conduits)
-			c.notify(solution);
+		for(int i = 0; i < conduits.size(); i++)
+			conduits.get(i).notify(solution[i]);
 		
 		for(Node node : nodes)
 			node.notify(solution);
